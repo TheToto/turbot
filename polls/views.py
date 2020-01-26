@@ -73,14 +73,14 @@ def delete(payload):
     user = User.objects.get(id=payload["user"]["id"])
     poll = Poll.objects.get(id=payload["actions"][0]["action_id"])
 
-    if not user.has_permissions:
+    if not user.has_permissions and user != poll.creator:
         logger.debug(
             settings.SLACK_CLIENT.chat_postMessage(
                 text=f"I'm sorry {user.slack_username}, I'm afraid I can't do that...",
                 channel=poll.channel.id,
             )
         )
-        return HttpResponse(200)
+        return HttpResponse(status=200)
 
     logger.debug(
         settings.SLACK_CLIENT.chat_delete(
