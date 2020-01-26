@@ -105,7 +105,7 @@ def create(request, unique=False, anonymous=False):
     try:
         name, choices = get_poll_choices(request.POST["text"])
     except InvalidPollException as e:
-        return SlackErrorResponse(f":x: {e} :x:")
+        return SlackErrorResponse(f":x: {e} :x:\n`{request.POST['command']} {request.POST['text']}`")
 
     team, channel, creator = get_request_entities(request)
 
@@ -129,7 +129,7 @@ def create(request, unique=False, anonymous=False):
         )
     except slack.errors.SlackApiError:
         return SlackErrorResponse(
-            f":x: Could not create the poll. Is <@{settings.TURBOT_USER_ID}> in the channel ? :x:"
+            f":x: Could not create the poll. Is <@{settings.TURBOT_USER_ID}> in the channel ? :x:\n`{request.POST['command']} {request.POST['text']}`"
         )
 
     return HttpResponse(status=200)
