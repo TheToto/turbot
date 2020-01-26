@@ -16,7 +16,10 @@ from django.conf import settings
 
 logger = logging.getLogger("slackbot")
 
-POLL_TEXT_PATTERN = re.compile('\s*(?P<start_quote>[‘’“”\'"])(((?!(?P=start_quote)).)+)(?P=start_quote)\s*')
+POLL_TEXT_PATTERN = re.compile(
+    "\s*(?P<start_quote>[‘’“”'\"])(((?!(?P=start_quote)).)+)(?P=start_quote)\s*"
+)
+
 
 class InvalidPollException(BaseException):
     pass
@@ -84,8 +87,7 @@ def delete(payload):
 
     logger.debug(
         settings.SLACK_CLIENT.chat_delete(
-            ts=payload["message"]["ts"],
-            channel=poll.channel.id,
+            ts=payload["message"]["ts"], channel=poll.channel.id,
         )
     )
 
@@ -105,7 +107,9 @@ def create(request, unique=False, anonymous=False):
     try:
         name, choices = get_poll_choices(request.POST["text"])
     except InvalidPollException as e:
-        return SlackErrorResponse(f":x: {e} :x:\n`{request.POST['command']} {request.POST['text']}`")
+        return SlackErrorResponse(
+            f":x: {e} :x:\n`{request.POST['command']} {request.POST['text']}`"
+        )
 
     team, channel, creator = get_request_entities(request)
 
@@ -123,9 +127,7 @@ def create(request, unique=False, anonymous=False):
 
     try:
         settings.SLACK_CLIENT.chat_postMessage(
-            channel=channel.id,
-            text=f"Poll: {poll.name}",
-            blocks=poll.slack_blocks,
+            channel=channel.id, text=f"Poll: {poll.name}", blocks=poll.slack_blocks,
         )
     except slack.errors.SlackApiError:
         return SlackErrorResponse(

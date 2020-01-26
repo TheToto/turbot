@@ -71,7 +71,7 @@ def photo(request):
     photo_slug = request.POST["text"]
     response = requests.head(settings.PHOTO_FSTRING.format(photo_slug))
     if response.status_code != 200:
-        return HttpResponse("No such photo_slug")
+        return HttpResponse(f"No such login : {photo_slug}")
 
     return JsonResponse(
         {
@@ -99,7 +99,5 @@ def post_photo(payload):
             blocks=blocks,
         )
     )
-    requests.post(payload["response_url"], json={
-        "delete_original": "true",
-    })
+    requests.post(payload["response_url"], json={"delete_original": "true",})
     return HttpResponse(status=200)

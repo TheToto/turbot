@@ -158,3 +158,6 @@ class UserChoice(models.Model):
     class Meta:
         unique_together = ("user", "choice")
         ordering = ("created_at",)
+
+    def __str__(self):
+        return f"{self.user} : {self.choice}"
