@@ -8,7 +8,7 @@ import logging
 
 SLACK_ACTIONS = {}
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("slackbot")
 
 
 def register_slack_action(name):

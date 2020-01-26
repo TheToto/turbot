@@ -8,7 +8,7 @@ from turbot import settings
 from workspaces.models import User
 from workspaces.utils import SLACK_ACTIONS, register_slack_action
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("slackbot")
 
 
 def get_photo_blocks(photo_slug, url, stalker=None):
@@ -97,7 +97,6 @@ def post_photo(payload):
             text=f"Picture of {photo_slug}",
             channel=payload["channel"]["id"],
             blocks=blocks,
-            as_user=False,
         )
     )
     return HttpResponse(200)

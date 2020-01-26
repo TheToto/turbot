@@ -14,7 +14,7 @@ from workspaces.utils import (
 )
 from django.conf import settings
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("slackbot")
 
 POLL_TEXT_PATTERN = re.compile('\s*(?P<start_quote>[‘’“”\'"])(((?!(?P=start_quote)).)+)(?P=start_quote)\s*')
 
@@ -60,7 +60,6 @@ def vote(payload):
             ts=payload["message"]["ts"],
             text=f"Poll: {choice.poll.name}",
             channel=payload["channel"]["id"],
-            as_user=False,
             blocks=choice.poll.slack_blocks,
         )
     )
@@ -79,14 +78,14 @@ def delete(payload):
             settings.SLACK_CLIENT.chat_postMessage(
                 text=f"I'm sorry {user.slack_username}, I'm afraid I can't do that...",
                 channel=poll.channel.id,
-                as_user=False,
             )
         )
         return HttpResponse(200)
 
     logger.debug(
         settings.SLACK_CLIENT.chat_delete(
-            ts=payload["message"]["ts"], channel=poll.channel.id, as_user=False
+            ts=payload["message"]["ts"],
+            channel=poll.channel.id,
         )
     )
 
@@ -94,7 +93,6 @@ def delete(payload):
         settings.SLACK_CLIENT.chat_postMessage(
             text=f"A poll was deleted by {user.slack_username}",
             channel=poll.channel.id,
-            as_user=False,
         )
     )
 
@@ -128,7 +126,6 @@ def create(request, unique=False, anonymous=False):
             channel=channel.id,
             text=f"Poll: {poll.name}",
             blocks=poll.slack_blocks,
-            as_user=False,
         )
     except slack.errors.SlackApiError:
         return SlackErrorResponse(
@@ -154,7 +151,6 @@ def reveal_results(payload):
         ts=payload["message"]["ts"],
         text=f"Poll: {poll.name}",
         channel=payload["channel"]["id"],
-        as_user=False,
         blocks=poll.slack_blocks,
     )
 

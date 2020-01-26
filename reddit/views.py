@@ -26,7 +26,6 @@ def subscribe(request):
 
     settings.SLACK_CLIENT.chat_postMessage(
         channel=channel.id,
-        as_user=False,
         text=f"{creator} added subscription to {subreddit.display_name}",
     )
     return HttpResponse(status=200)
@@ -48,7 +47,6 @@ def unsubscribe(request):
 
     settings.SLACK_CLIENT.chat_postMessage(
         channel=channel.id,
-        as_user=False,
         text=f"{creator} unsubscribed the channel from `{subreddit}`",
     )
     return HttpResponse(status=200)
@@ -59,7 +57,8 @@ def trigger(request):
     _, channel, creator = get_request_entities(request)
 
     settings.SLACK_CLIENT.chat_postMessage(
-        channel=channel.id, as_user=False, text=f"{creator} triggered turbot-reddit"
+        channel=channel.id,
+        text=f"{creator} triggered turbot-reddit"
     )
 
     trigger_submissions(channel.id)

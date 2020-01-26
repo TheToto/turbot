@@ -146,9 +146,9 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {
-        "django": {
+        "slackbot": {
             "handlers": ["console"],
-            "level": env("DJANGO_LOG_LEVEL", default="INFO"),
+            "level": env("DJANGO_LOG_LEVEL", default="DEBUG"),
         }
     },
 }
@@ -159,9 +159,7 @@ ERROR_ICON_URL = env("ERROR_ICON_URL", None)
 
 PRAW_CLIENT_ID = env("PRAW_CLIENT_ID")
 PRAW_CLIENT_SECRET = env("PRAW_CLIENT_SECRET")
-PRAW_USER_AGENT = env(
-    "PRAW_USER_AGENT", default=f"turbot-slack by /u/{env('REDDIT_USERNAME', 'unknown')}"
-)
+PRAW_USER_AGENT = env("PRAW_USER_AGENT", default=f"turbot-slack")
 
 REDDIT_SUBMISSION_CACHE_COUNT = env("REDDIT_SUBMISSION_CACHE_COUNT", default=5)
 
@@ -170,7 +168,7 @@ SLACK_CLIENT = WebClient(SLACK_API_TOKEN)
 NIGHT_START = parser.parse(env("NIGHT_START", default="23:00")).time()
 NIGHT_END = parser.parse(env("NIGHT_END", default="09:00")).time()
 
-PHOTO_FSTRING = env("PHOTO_FSTRING", default="https://picsum.photos/200")
+PHOTO_FSTRING = env("PHOTO_FSTRING", default="https://picsum.photos/200?{}")
 
 REDDIT_VALID_EXTENSION = ["jpg", "png", "gif"]
 
