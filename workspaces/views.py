@@ -6,7 +6,7 @@ from django.http import HttpResponse, JsonResponse
 
 from turbot import settings
 from workspaces.models import User
-from workspaces.utils import SLACK_ACTIONS, register_slack_action
+from workspaces.utils import SLACK_ACTIONS, register_slack_action, get_request_entities
 
 logger = logging.getLogger("slackbot")
 
@@ -101,3 +101,11 @@ def post_photo(payload):
     )
     requests.post(payload["response_url"], json={"delete_original": "true",})
     return HttpResponse(status=200)
+
+def suffix(request):
+    _, _, user = get_request_entities(request)
+    user.suffix = request.POST["text"]
+    user.save()
+    return JsonResponse({
+        "text": f"Saved !\nNew display : {user.slack_username}"
+    })

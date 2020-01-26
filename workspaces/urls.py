@@ -7,4 +7,5 @@ urlpatterns = [
     path("action", views.action, name="action"),
     path("test", views.test, name="test"),
     path("photo", views.photo, name="photo"),
+    path("set-suffix", views.suffix, name="set-suffix"),
 ]
