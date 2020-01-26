@@ -99,4 +99,7 @@ def post_photo(payload):
             blocks=blocks,
         )
     )
-    return HttpResponse(200)
+    requests.post(payload["response_url"], json={
+        "delete_original": "true",
+    })
+    return HttpResponse(status=200)
