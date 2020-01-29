@@ -52,6 +52,54 @@ def get_photo_blocks(photo_slug, url, stalker=None):
     return blocks
 
 
+def get_report_blocks(login, text, author=None):
+    blocks = [
+        {
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": f"Report `{login}`:\n{text}"},
+            "accessory": {
+                "type": "image",
+                "image_url": settings.PHOTO_FSTRING_SQUARE.format(login),
+                "alt_text": f"{login}",
+            },
+        },
+    ]
+    if not author:
+        response = requests.head(settings.PHOTO_FSTRING_SQUARE.format(login))
+        if response.status_code != 200:
+            blocks.append(
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": ":warning: Login not found"},
+                }
+            )
+        blocks.append(
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "Send report"},
+                        "action_id": "report.post",
+                        "value": json.dumps({"login": login, "text": text}),
+                    }
+                ],
+            }
+        )
+
+    if author:
+        blocks.append(
+            {
+                "type": "context",
+                "elements": [
+                    {"type": "mrkdwn", "text": f"*By: {author.slack_username}*",}
+                ],
+            }
+        )
+
+    return blocks
+
+
 def oauth(request):
     return "ok"
 
@@ -102,10 +150,35 @@ def post_photo(payload):
     requests.post(payload["response_url"], json={"delete_original": "true",})
     return HttpResponse(status=200)
 
+
 def suffix(request):
     _, _, user = get_request_entities(request)
     user.suffix = request.POST["text"]
     user.save()
-    return JsonResponse({
-        "text": f"Saved !\nNew display : {user.slack_username}"
-    })
+    return JsonResponse({"text": f"Saved !\nNew display : {user.slack_username}"})
+
+
+def report(request):
+    _, _, _ = get_request_entities(request)
+    login, report_text = request.POST["text"].split(maxsplit=1)
+    login = login.lower()
+    return JsonResponse({"text": "", "blocks": get_report_blocks(login, report_text)})
+
+
+@register_slack_action("report.post")
+def post_report(payload):
+    author = User(payload["user"]["id"])
+    values = json.loads(payload["actions"][0]["value"])
+    login = values["login"]
+    text = values["text"]
+
+    blocks = get_report_blocks(login, text, author)
+    logger.debug(blocks)
+
+    logger.debug(
+        settings.SLACK_CLIENT.chat_postMessage(
+            text="", channel=payload["channel"]["id"], blocks=blocks,
+        )
+    )
+    requests.post(payload["response_url"], json={"delete_original": "true",})
+    return HttpResponse(status=200)

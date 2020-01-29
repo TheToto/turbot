@@ -8,4 +8,5 @@ urlpatterns = [
     path("test", views.test, name="test"),
     path("photo", views.photo, name="photo"),
     path("set-suffix", views.suffix, name="set-suffix"),
+    path("report", views.report, name="report"),
 ]
