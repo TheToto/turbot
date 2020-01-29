@@ -46,7 +46,7 @@ def vote(payload):
     )
 
     choice = Choice.objects.prefetch_related("voters", "poll").get(
-        id=payload["actions"][0]["action_id"]
+        id=payload["actions"][0]["value"]
     )
 
     if choice.voters.filter(id=user.id).exists():
@@ -74,7 +74,7 @@ def vote(payload):
 @register_slack_action("polls.delete")
 def delete(payload):
     user = User.objects.get(id=payload["user"]["id"])
-    poll = Poll.objects.get(id=payload["actions"][0]["action_id"])
+    poll = Poll.objects.get(id=payload["actions"][0]["value"])
 
     if not user.has_permissions and user != poll.creator:
         logger.debug(
@@ -141,7 +141,7 @@ def create(request, unique=False, anonymous=False):
 @register_slack_action("polls.reveal")
 def reveal_results(payload):
     user = User.objects.get(id=payload["user"]["id"])
-    poll = Poll.objects.get(id=payload["actions"][0]["action_id"])
+    poll = Poll.objects.get(id=payload["actions"][0]["value"])
 
     if poll.creator.id != user.id:
         return SlackErrorResponse(f"You are not the creator of this poll.")

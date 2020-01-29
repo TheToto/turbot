@@ -29,8 +29,8 @@ def get_photo_blocks(photo_slug, url, stalker=None):
                     {
                         "type": "button",
                         "text": {"type": "plain_text", "text": "Send to Channel"},
-                        "action_id": photo_slug,
-                        "value": "photo.post",
+                        "value": photo_slug,
+                        "action_id": "photo.post",
                     }
                 ],
             }
@@ -63,7 +63,7 @@ def test(request):
 def action(request):
     payload = json.loads(request.POST["payload"])
     logger.debug(payload)
-    action_name: str = payload["actions"][0]["value"]
+    action_name: str = payload["actions"][0]["action_id"]
     return SLACK_ACTIONS[action_name](payload)
 
 
@@ -84,7 +84,7 @@ def photo(request):
 @register_slack_action("photo.post")
 def post_photo(payload):
     stalker = User(payload["user"]["id"])
-    photo_slug = payload["actions"][0]["action_id"]
+    photo_slug = payload["actions"][0]["value"]
 
     blocks = get_photo_blocks(
         photo_slug, settings.PHOTO_FSTRING.format(photo_slug), stalker

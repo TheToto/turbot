@@ -45,8 +45,8 @@ class Poll(models.Model):
                             "text": "Are you sure you want to delete this poll?",
                         },
                     },
-                    "value": "polls.delete",
-                    "action_id": f"{self.id}",
+                    "action_id": "polls.delete",
+                    "value": f"{self.id}",
                 },
             },
             {"type": "divider"},
@@ -67,8 +67,8 @@ class Poll(models.Model):
                                     "text": "Reveal results",
                                     "emoji": True,
                                 },
-                                "value": "polls.reveal",
-                                "action_id": f"{self.id}",
+                                "action_id": "polls.reveal",
+                                "value": f"{self.id}",
                             }
                         ],
                     }
@@ -145,8 +145,8 @@ class Choice(models.Model):
             "accessory": {
                 "type": "button",
                 "text": {"type": "plain_text", "text": "Vote", "emoji": True},
-                "action_id": f"{self.id}",
-                "value": "polls.vote",
+                "value": f"{self.id}",
+                "action_id": "polls.vote",
             },
         }
 
