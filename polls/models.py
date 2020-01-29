@@ -15,6 +15,10 @@ class Poll(models.Model):
     unique_choice = models.BooleanField(default=False)
     anonymous = models.BooleanField(default=False)
     visible_results = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
 
     @property
     def slack_blocks(self):
