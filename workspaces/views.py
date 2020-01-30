@@ -80,7 +80,7 @@ def get_report_blocks(login, text, author=None):
                     {
                         "type": "button",
                         "text": {"type": "plain_text", "text": "Send report"},
-                        "action_id": "report.post",
+                        "action_id": "report.post", 
                         "value": json.dumps({"login": login, "text": text}),
                     }
                 ],
@@ -162,7 +162,7 @@ def report(request):
     _, _, _ = get_request_entities(request)
     login, report_text = request.POST["text"].split(maxsplit=1)
     login = login.lower()
-    return JsonResponse({"text": "", "blocks": get_report_blocks(login, report_text)})
+    return JsonResponse({"text": "Report preview", "blocks": get_report_blocks(login, report_text)})
 
 
 @register_slack_action("report.post")
@@ -177,7 +177,7 @@ def post_report(payload):
 
     logger.debug(
         settings.SLACK_CLIENT.chat_postMessage(
-            text="", channel=payload["channel"]["id"], blocks=blocks,
+            text=f"{author} reported {login}", channel=payload["channel"]["id"], blocks=blocks,
         )
     )
     requests.post(payload["response_url"], json={"delete_original": "true",})
