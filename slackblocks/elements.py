@@ -86,12 +86,12 @@ class Text(Element):
         max_length: Optional[int] = None,
     ) -> "Text":
         type_ = TextType.PLAINTEXT if force_plaintext else TextType.MARKDOWN
-        if type(text) is str:
+        if isinstance(text, str):
             if max_length and len(text) > max_length:
                 raise InvalidUsageError("Text length exceeds Slack-imposed limit")
             return Text(text=text, type_=type_)
         else:
-            if max_length and len(text) > max_length:
+            if max_length and len(text.text) > max_length:
                 raise InvalidUsageError("Text length exceeds Slack-imposed limit")
             return Text(text=text.text, type_=type_)
 
@@ -129,13 +129,17 @@ class Confirm(Element):
         self,
         title: Union[str, Text],
         text: Union[str, Text],
-        confirm: Union[str, Text],
-        deny: Union[str, Text],
+        confirm: Optional[Union[str, Text]] = None,
+        deny: Optional[Union[str, Text]] = None,
     ):
         super().__init__(type_=ElementType.CONFIRM)
         self.title = Text.to_text(title, max_length=100, force_plaintext=True)
         self.text = Text.to_text(text, max_length=300)
+        if not confirm:
+            confirm = "Confirm"
         self.confirm = Text.to_text(confirm, max_length=30, force_plaintext=True)
+        if not deny:
+            deny = "Cancel"
         self.deny = Text.to_text(deny, max_length=30, force_plaintext=True)
 
     def _resolve(self) -> Dict[str, Any]:
@@ -160,7 +164,7 @@ class Button(Element):
         action_id: str,
         url: Optional[str] = None,
         value: Optional[str] = None,
-        style: Optional[str] = "default",
+        style: Optional[str] = None,
         confirm: Optional[Confirm] = None,
     ):
         super().__init__(type_=ElementType.BUTTON)
@@ -175,7 +179,8 @@ class Button(Element):
         button = self._attributes()
         button["text"] = self.text._resolve()
         button["action_id"] = self.action_id
-        button["style"] = self.style
+        if self.style:
+            button["style"] = self.style
         if self.url:
             button["url"] = self.url
         if self.value:

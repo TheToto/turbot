@@ -60,7 +60,7 @@ class SectionBlock(Block):
         accessory: Optional[Element] = None,
     ):
         super().__init__(type_=BlockType.SECTION, block_id=block_id)
-        if type(text) is Text:
+        if isinstance(text, Text):
             self.text = text
         else:
             self.text = Text(text)
@@ -73,7 +73,7 @@ class SectionBlock(Block):
         if self.fields:
             section["fields"] = self.fields
         if self.accessory:
-            section["accessory"] = self.accessory
+            section["accessory"] = self.accessory._resolve()
         return section
 
 
@@ -105,7 +105,7 @@ class ImageBlock(Block):
         super().__init__(type_=BlockType.IMAGE, block_id=block_id)
         self.image_url = image_url
         self.alt_text = alt_text
-        if title and type(title) is Text:
+        if title and isinstance(title, Text):
             if title.text_type == TextType.MARKDOWN:
                 self.title = Text(
                     text=title.text,
@@ -135,15 +135,16 @@ class ActionsBlock(Block):
     """
 
     def __init__(
-        self, elements: Optional[List[Element]] = None, block_id: Optional[str] = None
+        self,
+        elements: Optional[Union[List[Element], Element]] = None,
+        block_id: Optional[str] = None,
     ):
         super().__init__(type_=BlockType.ACTIONS, block_id=block_id)
-        if type(elements) is List[Element]:
-            self.elements = elements
-        elif type(elements) is Element:
-            self.elements = [
+        if isinstance(elements, Element):
+            elements = [
                 elements,
             ]
+        self.elements = elements
 
     def _resolve(self):
         actions = self._attributes()
@@ -157,10 +158,20 @@ class ContextBlock(Block):
     """
 
     def __init__(
-        self, elements: Optional[List[Element]] = None, block_id: Optional[str] = None
+        self,
+        elements: Optional[Union[List[Element], Element, str]] = None,
+        block_id: Optional[str] = None,
     ):
         super().__init__(type_=BlockType.CONTEXT, block_id=block_id)
         self.elements = []
+        if isinstance(elements, Element):
+            elements = [
+                elements,
+            ]
+        elif isinstance(elements, str):
+            elements = [
+                Text(elements),
+            ]
         for element in elements:
             if element.type == ElementType.TEXT or element.type == ElementType.IMAGE:
                 self.elements.append(element)
