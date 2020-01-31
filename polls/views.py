@@ -129,7 +129,9 @@ def create(request, unique=False, anonymous=False):
         settings.SLACK_CLIENT.chat_postMessage(
             channel=channel.id, text=f"Poll: {poll.name}", blocks=poll.slack_blocks,
         )
-    except slack.errors.SlackApiError:
+    except slack.errors.SlackApiError as e:
+        logger.error(e)
+        poll.delete()
         return SlackErrorResponse(
             f":x: Could not create the poll. Is <@{settings.TURBOT_USER_ID}> in the channel ? :x:\n`{request.POST['command']} {request.POST['text']}`"
         )
