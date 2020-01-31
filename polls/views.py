@@ -77,13 +77,7 @@ def delete(payload):
     poll = Poll.objects.get(id=payload["actions"][0]["value"])
 
     if not user.has_permissions and user != poll.creator:
-        logger.debug(
-            settings.SLACK_CLIENT.chat_postMessage(
-                text=f"I'm sorry {user.slack_username}, I'm afraid I can't do that...",
-                channel=poll.channel.id,
-            )
-        )
-        return HttpResponse(status=200)
+        return SlackErrorResponse(f"You are not the creator of this poll.")
 
     logger.debug(
         settings.SLACK_CLIENT.chat_delete(
