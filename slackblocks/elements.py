@@ -14,6 +14,21 @@ class ElementType(Enum):
     TEXT = "text"
     IMAGE = "image"
     BUTTON = "button"
+
+    # TODO
+    # SELECT = "static_select"
+    # MULTI_SELECT = "multi_static_select"
+    # EXTERNAL_SELECT = "multi_external_select"
+    # USER_SELECT = "multi_users_select"
+    # CONVERSATION_SELECT = "multi_conversations_select"
+    # CHANNEL_SELECT = "multi_channels_select"
+
+    # OVERFLOW = "overflow"
+    # DATEPICKER = "datepicker"
+    # TEXT_INPUT = "plain_text_input"
+
+    # OPTION_GROUP = "option_group"
+    # OPTION = "option"
     CONFIRM = "confirm"
 
 
