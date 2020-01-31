@@ -4,6 +4,16 @@ import requests
 import json
 from django.http import HttpResponse, JsonResponse
 
+from slackblocks import (
+    SectionBlock,
+    Text,
+    ImageBlock,
+    ActionsBlock,
+    Button,
+    ContextBlock,
+    Image,
+)
+
 from turbot import settings
 from workspaces.models import User
 from workspaces.utils import SLACK_ACTIONS, register_slack_action, get_request_entities
@@ -13,91 +23,48 @@ logger = logging.getLogger("slackbot")
 
 def get_photo_blocks(photo_slug, url, stalker=None):
     blocks = [
-        {"type": "section", "text": {"type": "mrkdwn", "text": f"*{photo_slug}*"}},
-        {
-            "type": "image",
-            "title": {"type": "plain_text", "text": f"{photo_slug}"},
-            "image_url": url,
-            "alt_text": f"{photo_slug}",
-        },
+        SectionBlock(text=f"*{photo_slug}*"),
+        ImageBlock(image_url=url, alt_text=photo_slug, title=photo_slug),
     ]
     if not stalker:
         blocks.append(
-            {
-                "type": "actions",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Send to Channel"},
-                        "value": photo_slug,
-                        "action_id": "photo.post",
-                    }
-                ],
-            }
+            ActionsBlock(
+                Button(text="Send to Channel", action_id="photo.post", value=photo_slug)
+            )
         )
+    else:
+        blocks.append(ContextBlock(f"*Stalké Par: {stalker.slack_username}*"))
 
-    if stalker:
-        blocks.append(
-            {
-                "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*Stalké Par: {stalker.slack_username}*",
-                    }
-                ],
-            }
-        )
-
-    return blocks
+    return repr(blocks)
 
 
 def get_report_blocks(login, text, author=None):
     blocks = [
-        {
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": f"Report `{login}`:\n{text}"},
-            "accessory": {
-                "type": "image",
-                "image_url": settings.PHOTO_FSTRING_SQUARE.format(login),
-                "alt_text": f"{login}",
-            },
-        },
+        SectionBlock(
+            f"Report `{login}`:\n{text}",
+            accessory=Image(
+                image_url=settings.PHOTO_FSTRING_SQUARE.format(login), alt_text=login
+            ),
+        )
     ]
     if not author:
         response = requests.head(settings.PHOTO_FSTRING_SQUARE.format(login))
         if response.status_code != 200:
-            blocks.append(
-                {
-                    "type": "section",
-                    "text": {"type": "mrkdwn", "text": ":warning: Login not found"},
-                }
+            blocks.append(SectionBlock(":warning: Login not found"))
+
+        blocks.append(
+            ActionsBlock(
+                Button(
+                    text="Send report",
+                    action_id="report.post",
+                    value=json.dumps({"login": login, "text": text}),
+                )
             )
-        blocks.append(
-            {
-                "type": "actions",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "Send report"},
-                        "action_id": "report.post", 
-                        "value": json.dumps({"login": login, "text": text}),
-                    }
-                ],
-            }
         )
+    else:
+        ContextBlock(f"*By: {author.slack_username}*")
 
-    if author:
-        blocks.append(
-            {
-                "type": "context",
-                "elements": [
-                    {"type": "mrkdwn", "text": f"*By: {author.slack_username}*",}
-                ],
-            }
-        )
-
-    return blocks
+    return repr(blocks)
 
 
 def oauth(request):
@@ -116,7 +83,7 @@ def action(request):
 
 
 def photo(request):
-    photo_slug = request.POST["text"]
+    photo_slug = request.POST["text"].lower()
     response = requests.head(settings.PHOTO_FSTRING.format(photo_slug))
     if response.status_code != 200:
         return HttpResponse(f"No such login : {photo_slug}")
@@ -162,7 +129,9 @@ def report(request):
     _, _, _ = get_request_entities(request)
     login, report_text = request.POST["text"].split(maxsplit=1)
     login = login.lower()
-    return JsonResponse({"text": "Report preview", "blocks": get_report_blocks(login, report_text)})
+    return JsonResponse(
+        {"text": "Report preview", "blocks": get_report_blocks(login, report_text)}
+    )
 
 
 @register_slack_action("report.post")
@@ -177,7 +146,9 @@ def post_report(payload):
 
     logger.debug(
         settings.SLACK_CLIENT.chat_postMessage(
-            text=f"{author} reported {login}", channel=payload["channel"]["id"], blocks=blocks,
+            text=f"{author} reported {login}",
+            channel=payload["channel"]["id"],
+            blocks=blocks,
         )
     )
     requests.post(payload["response_url"], json={"delete_original": "true",})

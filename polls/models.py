@@ -5,6 +5,17 @@ from django.utils import timezone
 from workspaces.models import User, Team, Channel
 from workspaces.utils import int_to_emoji
 
+from slackblocks import (
+    Button,
+    SectionBlock,
+    Text,
+    TextType,
+    Confirm,
+    DividerBlock,
+    ActionsBlock,
+    ContextBlock,
+)
+
 
 class Poll(models.Model):
     name = models.CharField(max_length=256)
@@ -24,77 +35,41 @@ class Poll(models.Model):
     def slack_blocks(self):
         total_votes = UserChoice.objects.filter(choice__poll__id=self.id).count()
 
-        return [
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*{self.name}*\n\nTotal votes: `{total_votes}`",
-                },
-                "accessory": {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Delete Poll",
-                        "emoji": True,
-                    },
-                    "confirm": {
-                        "title": {"type": "plain_text", "text": "Delete Poll"},
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Are you sure you want to delete this poll?",
-                        },
-                    },
-                    "action_id": "polls.delete",
-                    "value": f"{self.id}",
-                },
-            },
-            {"type": "divider"},
+        blocks = [
+            SectionBlock(
+                f"*{self.name}*\n\nTotal votes: `{total_votes}`",
+                accessory=Button(
+                    "Delete Poll",
+                    action_id="polls.delete",
+                    value=f"{self.id}",
+                    confirm=Confirm(
+                        "Delete Poll", text="Are you sure you want to delete this poll?"
+                    ),
+                ),
+            ),
+            DividerBlock(),
             *map(
                 lambda c: c.get_slack_block(self.visible_results, self.anonymous),
                 self.choices.order_by("index").prefetch_related("voters").all(),
             ),
-            # Dirty hack, don't do this at home
             *(
                 [
-                    {
-                        "type": "actions",
-                        "elements": [
-                            {
-                                "type": "button",
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Reveal results",
-                                    "emoji": True,
-                                },
-                                "action_id": "polls.reveal",
-                                "value": f"{self.id}",
-                            }
-                        ],
-                    }
+                    ActionsBlock(
+                        Button(
+                            "Reveal results",
+                            action_id="polls.reveal",
+                            value=f"{self.id}",
+                        )
+                    )
                 ]
                 if not self.visible_results
                 else []
             ),
-            {
-                "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f"*Created By:* {self.creator.slack_username}",
-                    }
-                ],
-            },
-            {
-                "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f'{timezone.now().strftime("Last updated: %x at %H:%M")}',
-                    }
-                ],
-            },
+            ContextBlock(f"*Created By:* {self.creator.slack_username}"),
+            ContextBlock(f'{timezone.now().strftime("Last updated: %x at %H:%M")}'),
         ]
+
+        return repr(blocks)
 
     def __str__(self):
         return (
@@ -136,19 +111,10 @@ class Choice(models.Model):
         if not anonymous:
             voters = f"\n{self.slack_voters}"
 
-        return {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f"{self.slack_text}{voter_count}{voters}",
-            },
-            "accessory": {
-                "type": "button",
-                "text": {"type": "plain_text", "text": "Vote", "emoji": True},
-                "value": f"{self.id}",
-                "action_id": "polls.vote",
-            },
-        }
+        return SectionBlock(
+            f"{self.slack_text}{voter_count}{voters}",
+            accessory=Button(text="Vote", action_id="polls.vote", value=f"{self.id}"),
+        )
 
     def __str__(self):
         return f'Choice "{self.text}" of poll "{self.poll.name}" ({self.poll.id})'

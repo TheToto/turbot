@@ -1,6 +1,8 @@
 from typing import Optional
 import datetime
 
+from slackblocks import SectionBlock, ImageBlock, ContextBlock
+
 import praw
 from django.conf import settings
 from . import models
@@ -47,28 +49,15 @@ def send_submission(submission: models.Submission):
         f"https://reddit.com/r/{submission.subreddit}/comments/{submission.post_id}/"
     )
 
-    blocks = [
-        {
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": f"*<{perma_link}|{submission.title}>*"},
-        }
-    ]
+    blocks = [SectionBlock(f"*<{perma_link}|{submission.title}>*")]
 
     if has_valid_extension(submission.url):
-        blocks.append(
-            {"type": "image", "image_url": submission.url, "alt_text": submission.url}
-        )
+        blocks.append(ImageBlock(image_url=submission.url, alt_text=submission.url))
 
     blocks.append(
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": f"<https://reddit.com/r/{submission.subreddit}|/r/{submission.subreddit}>",
-                }
-            ],
-        }
+        ContextBlock(
+            f"<https://reddit.com/r/{submission.subreddit}|/r/{submission.subreddit}>"
+        )
     )
 
     settings.SLACK_CLIENT.chat_postMessage(
