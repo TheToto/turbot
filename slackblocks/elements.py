@@ -12,6 +12,7 @@ class ElementType(Enum):
     """
 
     TEXT = "text"
+
     IMAGE = "image"
     BUTTON = "button"
 
@@ -24,11 +25,11 @@ class ElementType(Enum):
     # CHANNEL_SELECT = "multi_channels_select"
 
     # OVERFLOW = "overflow"
-    # DATEPICKER = "datepicker"
+    DATEPICKER = "datepicker"
     # TEXT_INPUT = "plain_text_input"
 
     # OPTION_GROUP = "option_group"
-    # OPTION = "option"
+    OPTION = "option"
     CONFIRM = "confirm"
 
 
@@ -112,6 +113,37 @@ class Text(Element):
 
     def __str__(self) -> str:
         return dumps(self._resolve())
+
+
+class Option(Element):
+    """
+    Option for select
+    """
+
+    def __init__(
+        self,
+        text: Union[str, Text],
+        value: str,
+        description: Optional[Union[str, Text]] = None,
+        url: Optional[str] = None,
+    ):
+        super().__init__(ElementType.OPTION)
+        self.text = Text.to_text(text, force_plaintext=True, max_length=75)
+        self.value = value
+        self.description = (
+            Text.to_text(description, force_plaintext=True, max_length=75)
+            if description
+            else None
+        )
+        self.url = url
+
+    def _resolve(self) -> Dict[str, Any]:
+        option = {"text": self.text._resolve(), "value": self.value}
+        if self.description:
+            option["description"] = self.description
+        if self.url:
+            option["url"] = self.url
+        return option
 
 
 class Image(Element):
@@ -203,3 +235,37 @@ class Button(Element):
         if self.confirm:
             button["confirm"] = self.confirm._resolve()
         return button
+
+
+class Datepicker(Element):
+    """
+    Datepicker
+    """
+
+    def __init__(
+        self,
+        action_id: str,
+        placeholder: Optional[Union[str, Text]] = None,
+        initial_date: Optional[str] = None,  # Format : YYYY-MM-DD
+        confirm: Optional[Confirm] = None,
+    ):
+        super().__init__(type_=ElementType.BUTTON)
+        self.action_id = action_id
+        self.placeholder = (
+            Text.to_text(placeholder, force_plaintext=True, max_length=150)
+            if placeholder
+            else None
+        )
+        self.initial_date = initial_date
+        self.confirm = confirm
+
+    def _resolve(self) -> Dict[str, Any]:
+        datepicker = self._attributes()
+        datepicker["action_id"] = self.action_id
+        if self.placeholder:
+            datepicker["placeholder"] = self.placeholder
+        if self.initial_date:
+            datepicker["initial_date"] = self.initial_date
+        if self.confirm:
+            datepicker["confirm"] = self.confirm._resolve()
+        return datepicker

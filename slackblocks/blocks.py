@@ -19,6 +19,7 @@ class BlockType(Enum):
     ACTIONS = "actions"
     CONTEXT = "context"
     FILE = "file"
+    INPUT = "input"
 
 
 class Block(ABC):
@@ -47,6 +48,7 @@ class Block(ABC):
 
 class SectionBlock(Block):
     """
+    Usable with : Message, Modals, Home Tabs
     A section is one of the most flexible blocks available -
     it can be used as a simple text block, in combination with text fields,
     or side-by-side with any of the available block elements.
@@ -60,10 +62,7 @@ class SectionBlock(Block):
         accessory: Optional[Element] = None,
     ):
         super().__init__(type_=BlockType.SECTION, block_id=block_id)
-        if isinstance(text, Text):
-            self.text = text
-        else:
-            self.text = Text(text)
+        self.text = Text.to_text(text, max_length=3000)
         self.fields = fields
         self.accessory = accessory
 
@@ -71,7 +70,7 @@ class SectionBlock(Block):
         section = self._attributes()
         section["text"] = self.text._resolve()
         if self.fields:
-            section["fields"] = self.fields  # TODO : Test this
+            section["fields"] = [field._resolve() for field in self.fields]
         if self.accessory:
             section["accessory"] = self.accessory._resolve()
         return section
@@ -79,6 +78,7 @@ class SectionBlock(Block):
 
 class DividerBlock(Block):
     """
+    Usable with : Message, Modals, Home Tabs
     A content divider, like an <hr>, to split up different blocks inside of
     a message. The divider block is nice and neat, requiring only a type.
     """
@@ -92,6 +92,7 @@ class DividerBlock(Block):
 
 class ImageBlock(Block):
     """
+    Usable with : Message, Modals, Home Tabs
     A simple image block, designed to make those cat photos really pop.
     """
 
@@ -105,20 +106,11 @@ class ImageBlock(Block):
         super().__init__(type_=BlockType.IMAGE, block_id=block_id)
         self.image_url = image_url
         self.alt_text = alt_text
-        if title and isinstance(title, Text):
-            if title.text_type == TextType.MARKDOWN:
-                self.title = Text(
-                    text=title.text,
-                    type_=TextType.PLAINTEXT,
-                    emoji=title.emoji,
-                    verbatim=title.verbatim,
-                )
-            else:
-                self.title = title
-        elif title:
-            self.title = Text(text=title, type_=TextType.PLAINTEXT)
-        else:
-            self.title = Text(text=" ", type_=TextType.PLAINTEXT)
+        self.title = (
+            Text.to_text(title, max_length=2000, force_plaintext=True)
+            if title
+            else None
+        )
 
     def _resolve(self) -> Dict[str, Any]:
         image = self._attributes()
@@ -131,19 +123,16 @@ class ImageBlock(Block):
 
 class ActionsBlock(Block):
     """
+    Usable with : Message, Modals, Home Tabs
     A block that is used to hold interactive elements.
     """
 
     def __init__(
-        self,
-        elements: Optional[Union[List[Element], Element]] = None,
-        block_id: Optional[str] = None,
+        self, elements: Union[List[Element], Element], block_id: Optional[str] = None,
     ):
         super().__init__(type_=BlockType.ACTIONS, block_id=block_id)
         if isinstance(elements, Element):
-            elements = [
-                elements,
-            ]
+            elements = [elements]
         self.elements = elements
 
     def _resolve(self):
@@ -154,24 +143,21 @@ class ActionsBlock(Block):
 
 class ContextBlock(Block):
     """
+    Usable with : Message, Modals, Home Tabs
     Displays message context, which can include both images and text.
     """
 
     def __init__(
         self,
-        elements: Optional[Union[List[Element], Element, str]] = None,
+        elements: Union[List[Element], Element, str],
         block_id: Optional[str] = None,
     ):
         super().__init__(type_=BlockType.CONTEXT, block_id=block_id)
         self.elements = []
         if isinstance(elements, Element):
-            elements = [
-                elements,
-            ]
+            elements = [elements]
         elif isinstance(elements, str):
-            elements = [
-                Text(elements),
-            ]
+            elements = [Text(elements)]
         for element in elements:
             if element.type == ElementType.TEXT or element.type == ElementType.IMAGE:
                 self.elements.append(element)
@@ -190,6 +176,7 @@ class ContextBlock(Block):
 
 class FileBlock(Block):
     """
+    Usable with : Message
     Displays a remote file.
     """
 
@@ -203,3 +190,35 @@ class FileBlock(Block):
         file["external_id"] = self.external_id
         file["source"] = self.source
         return file
+
+
+class InputBlock(Block):
+    """
+    Usable with : Input
+    """
+
+    def __init__(
+        self,
+        label: Union[Text, str],
+        element: Element,
+        block_id: Optional[str] = None,
+        hint: Optional[Union[Text, str]] = None,
+        optional: Optional[bool] = None,
+    ):
+        super().__init__(type_=BlockType.INPUT, block_id=block_id)
+        self.label = Text.to_text(label, force_plaintext=True, max_length=2000)
+        self.element = element
+        self.hint = (
+            Text.to_text(hint, force_plaintext=True, max_length=2000) if hint else None
+        )
+        self.optional = optional
+
+    def _resolve(self) -> Dict[str, any]:
+        input = self._attributes()
+        input["label"] = self.label._resolve()
+        input["element"] = self.element._resolve()
+        if self.hint:
+            input["hint"] = self.hint._resolve()
+        if self.optional:
+            input["optional"] = self.optional
+        return input
