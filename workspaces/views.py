@@ -62,7 +62,7 @@ def get_report_blocks(login, text, author=None):
             )
         )
     else:
-        ContextBlock(f"*By: {author.slack_username}*")
+        blocks.append(ContextBlock(f"*By: {author.slack_username}*"))
 
     return repr(blocks)
 
