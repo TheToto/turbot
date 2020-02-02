@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from json import dumps
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List
 from slackblocks.errors import InvalidUsageError
 
 
@@ -16,19 +16,19 @@ class ElementType(Enum):
     IMAGE = "image"
     BUTTON = "button"
 
-    # TODO
-    # SELECT = "static_select"
-    # MULTI_SELECT = "multi_static_select"
-    # EXTERNAL_SELECT = "multi_external_select"
-    # USER_SELECT = "multi_users_select"
-    # CONVERSATION_SELECT = "multi_conversations_select"
-    # CHANNEL_SELECT = "multi_channels_select"
+    STATIC_SELECT = "static_select"
+    EXTERNAL_SELECT = "external_select"
+    USER_SELECT = "users_select"
+    CONVERSATION_SELECT = "conversations_select"
+    CHANNEL_SELECT = "channels_select"
 
-    # OVERFLOW = "overflow"
+    OVERFLOW = "overflow"
     DATEPICKER = "datepicker"
-    # TEXT_INPUT = "plain_text_input"
 
-    # OPTION_GROUP = "option_group"
+    TEXT_INPUT = "plain_text_input"
+    RADIO_BUTTON = "radio_buttons"
+
+    # TODO: OPTION_GROUP = "option_group"
     OPTION = "option"
     CONFIRM = "confirm"
 
@@ -249,7 +249,7 @@ class Datepicker(Element):
         initial_date: Optional[str] = None,  # Format : YYYY-MM-DD
         confirm: Optional[Confirm] = None,
     ):
-        super().__init__(type_=ElementType.BUTTON)
+        super().__init__(type_=ElementType.DATEPICKER)
         self.action_id = action_id
         self.placeholder = (
             Text.to_text(placeholder, force_plaintext=True, max_length=150)
@@ -263,9 +263,300 @@ class Datepicker(Element):
         datepicker = self._attributes()
         datepicker["action_id"] = self.action_id
         if self.placeholder:
-            datepicker["placeholder"] = self.placeholder
+            datepicker["placeholder"] = self.placeholder._resolve()
         if self.initial_date:
             datepicker["initial_date"] = self.initial_date
         if self.confirm:
             datepicker["confirm"] = self.confirm._resolve()
         return datepicker
+
+
+class Overflow(Element):
+    """
+    Overflow
+    """
+
+    def __init__(
+        self, action_id: str, options: List[Option], confirm: Optional[Confirm] = None
+    ):
+        super().__init__(type_=ElementType.OVERFLOW)
+        self.action_id = action_id
+        self.options = options
+        self.confirm = confirm
+
+    def _resolve(self) -> Dict[str, Any]:
+        overflow = self._attributes()
+        overflow["action_id"] = self.action_id
+        overflow["options"] = [option._resolve() for option in self.options]
+        if self.confirm:
+            overflow["confirm"] = self.confirm._resolve()
+        return overflow
+
+
+class TextInput(Element):
+    """
+    Usable only in modals
+    Text input
+    """
+
+    def __init__(
+        self,
+        action_id: str,
+        placeholder: Optional[Union[str, Text]] = None,
+        initial_value: Optional[str] = None,
+        multiline: Optional[bool] = None,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+    ):
+        super().__init__(type_=ElementType.TEXT_INPUT)
+        self.action_id = action_id
+        self.placeholder = (
+            Text.to_text(placeholder, force_plaintext=True, max_length=150)
+            if placeholder
+            else None
+        )
+        self.initial_value = initial_value
+        self.multiline = multiline
+        self.min_length = min_length
+        self.max_length = max_length
+
+    def _resolve(self) -> Dict[str, Any]:
+        textinput = self._attributes()
+        textinput["action_id"] = self.action_id
+        if self.placeholder:
+            textinput["placeholder"] = self.placeholder._resolve()
+        if self.initial_value:
+            textinput["initial_date"] = self.initial_value
+        if self.multiline:
+            textinput["confirm"] = self.multiline
+        if self.min_length:
+            textinput["min_length"] = self.min_length
+        if self.max_length:
+            textinput["max_length"] = self.max_length
+        return textinput
+
+
+class RadioButton(Element):
+    """
+    Usable only in modals and home
+    Radio buttons
+    """
+
+    def __init__(
+        self,
+        action_id: str,
+        options: List[Option],
+        initial_option: Optional[Option] = None,
+        confirm: Optional[Confirm] = None,
+    ):
+        super().__init__(type_=ElementType.RADIO_BUTTON)
+        self.action_id = action_id
+        self.options = options
+        self.initial_option = initial_option
+        self.confirm = confirm
+
+    def _resolve(self) -> Dict[str, Any]:
+        radio = self._attributes()
+        radio["action_id"] = self.action_id
+        radio["options"] = [option._resolve() for option in self.options]
+        if self.initial_option:
+            radio["initial_option"] = self.initial_option._resolve()
+        if self.confirm:
+            radio["confirm"] = self.confirm._resolve()
+        return radio
+
+
+class StaticSelect(Element):
+    """
+    Static select
+    """
+
+    def __init__(
+        self,
+        placeholder: Union[str, Text],
+        action_id: str,
+        options: List[Option],
+        initial_option: Optional[Option] = None,
+        min_query_length: Optional[int] = None,
+        confirm: Optional[Confirm] = None,
+        multi: Optional[bool] = False,
+    ):
+        super().__init__(type_=ElementType.EXTERNAL_SELECT)
+        self.placeholder = (
+            Text.to_text(placeholder, force_plaintext=True, max_length=150)
+            if placeholder
+            else None
+        )
+        self.action_id = action_id
+        self.options = options
+        self.initial_option = initial_option
+        self.min_query_length = min_query_length
+        self.confirm = confirm
+        self.multi = multi
+
+    def _resolve(self) -> Dict[str, Any]:
+        select = self._attributes()
+        if self.multi:
+            select["type"] = "multi_" + select["type"]
+        select["placeholder"] = self.placeholder._resolve()
+        select["action_id"] = self.action_id
+        select["options"] = [option._resolve() for option in self.options]
+        if self.initial_option:
+            select["initial_option"] = self.initial_option._resolve()
+        if self.min_query_length:
+            select["min_query_length"] = self.min_query_length
+        if self.confirm:
+            select["confirm"] = self.confirm._resolve()
+        return select
+
+
+class ExternalSelect(Element):
+    """
+    External select
+    """
+
+    def __init__(
+        self,
+        placeholder: Union[str, Text],
+        action_id: str,
+        initial_option: Optional[Option] = None,
+        min_query_length: Optional[int] = None,
+        confirm: Optional[Confirm] = None,
+        multi: Optional[bool] = False,
+    ):
+        super().__init__(type_=ElementType.EXTERNAL_SELECT)
+        self.placeholder = (
+            Text.to_text(placeholder, force_plaintext=True, max_length=150)
+            if placeholder
+            else None
+        )
+        self.action_id = action_id
+        self.initial_option = initial_option
+        self.min_query_length = min_query_length
+        self.confirm = confirm
+        self.multi = multi
+
+    def _resolve(self) -> Dict[str, Any]:
+        select = self._attributes()
+        if self.multi:
+            select["type"] = "multi_" + select["type"]
+        select["placeholder"] = self.placeholder._resolve()
+        select["action_id"] = self.action_id
+        if self.initial_option:
+            select["initial_option"] = self.initial_option._resolve()
+        if self.min_query_length:
+            select["min_query_length"] = self.min_query_length
+        if self.confirm:
+            select["confirm"] = self.confirm._resolve()
+        return select
+
+
+class UserSelect(Element):
+    """
+    User select
+    """
+
+    def __init__(
+        self,
+        placeholder: Union[str, Text],
+        action_id: str,
+        initial_user: Optional[str] = None,
+        confirm: Optional[Confirm] = None,
+        multi: Optional[bool] = False,
+    ):
+        super().__init__(type_=ElementType.USER_SELECT)
+        self.placeholder = (
+            Text.to_text(placeholder, force_plaintext=True, max_length=150)
+            if placeholder
+            else None
+        )
+        self.action_id = action_id
+        self.initial_user = initial_user
+        self.confirm = confirm
+        self.multi = multi
+
+    def _resolve(self) -> Dict[str, Any]:
+        select = self._attributes()
+        if self.multi:
+            select["type"] = "multi_" + select["type"]
+        select["placeholder"] = self.placeholder._resolve()
+        select["action_id"] = self.action_id
+        if self.initial_user:
+            select["initial_user"] = self.initial_user
+        if self.confirm:
+            select["confirm"] = self.confirm._resolve()
+        return select
+
+
+class ConversationSelect(Element):
+    """
+    Conversation select
+    """
+
+    def __init__(
+        self,
+        placeholder: Union[str, Text],
+        action_id: str,
+        initial_conversation: Optional[str] = None,
+        confirm: Optional[Confirm] = None,
+        multi: Optional[bool] = False,
+    ):
+        super().__init__(type_=ElementType.CONVERSATION_SELECT)
+        self.placeholder = (
+            Text.to_text(placeholder, force_plaintext=True, max_length=150)
+            if placeholder
+            else None
+        )
+        self.action_id = action_id
+        self.initial_conversation = initial_conversation
+        self.confirm = confirm
+        self.multi = multi
+
+    def _resolve(self) -> Dict[str, Any]:
+        select = self._attributes()
+        if self.multi:
+            select["type"] = "multi_" + select["type"]
+        select["placeholder"] = self.placeholder._resolve()
+        select["action_id"] = self.action_id
+        if self.initial_conversation:
+            select["initial_conversation"] = self.initial_conversation
+        if self.confirm:
+            select["confirm"] = self.confirm._resolve()
+        return select
+
+
+class ChannelSelect(Element):
+    """
+    Conversation select
+    """
+
+    def __init__(
+        self,
+        placeholder: Union[str, Text],
+        action_id: str,
+        initial_channel: Optional[str] = None,
+        confirm: Optional[Confirm] = None,
+        multi: Optional[bool] = False,
+    ):
+        super().__init__(type_=ElementType.CONVERSATION_SELECT)
+        self.placeholder = (
+            Text.to_text(placeholder, force_plaintext=True, max_length=150)
+            if placeholder
+            else None
+        )
+        self.action_id = action_id
+        self.initial_channel = initial_channel
+        self.confirm = confirm
+        self.multi = multi
+
+    def _resolve(self) -> Dict[str, Any]:
+        select = self._attributes()
+        if self.multi:
+            select["type"] = "multi_" + select["type"]
+        select["placeholder"] = self.placeholder._resolve()
+        select["action_id"] = self.action_id
+        if self.initial_channel:
+            select["initial_channel"] = self.initial_channel
+        if self.confirm:
+            select["confirm"] = self.confirm._resolve()
+        return select

@@ -194,7 +194,7 @@ class FileBlock(Block):
 
 class InputBlock(Block):
     """
-    Usable with : Input
+    Usable only on modals
     """
 
     def __init__(
