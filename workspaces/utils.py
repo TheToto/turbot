@@ -7,6 +7,7 @@ from workspaces.models import Team, Channel, User
 import logging
 
 SLACK_ACTIONS = {}
+SLACK_EVENTS = {}
 
 logger = logging.getLogger("slackbot")
 
@@ -14,6 +15,14 @@ logger = logging.getLogger("slackbot")
 def register_slack_action(name):
     def __inner(f):
         SLACK_ACTIONS[name] = f
+        return f
+
+    return __inner
+
+
+def register_slack_event(name):
+    def __inner(f):
+        SLACK_EVENTS[name] = f
         return f
 
     return __inner
