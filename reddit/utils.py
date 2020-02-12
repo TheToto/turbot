@@ -63,7 +63,7 @@ def send_submission(submission: models.Submission):
     settings.SLACK_CLIENT.chat_postMessage(
         channel=submission.channel.id,
         text=f"New submission: {submission.title}",
-        blocks=blocks,
+        blocks=repr(blocks),
     )
 
 
