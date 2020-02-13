@@ -27,7 +27,9 @@ def action(request):
     payload = json.loads(request.POST["payload"])
     logger.debug(payload)
     action_name: str = payload["actions"][0]["action_id"]
-    return SLACK_ACTIONS[action_name](payload)
+    for action_fun in SLACK_ACTIONS[action_name]:
+        action_fun(payload)
+    return HttpResponse(status=200)
 
 
 def event(request):
@@ -37,5 +39,6 @@ def event(request):
         return JsonResponse({"challenge": payload["challenge"]})
     if payload["type"] == "event_callback":
         event_name = payload["event"]["type"]
-        return SLACK_EVENTS[event_name](payload)
+        for event_fun in SLACK_EVENTS[event_name]:
+            event_fun(payload)
     return HttpResponse(status=200)

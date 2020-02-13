@@ -14,7 +14,10 @@ logger = logging.getLogger("slackbot")
 
 def register_slack_action(name):
     def __inner(f):
-        SLACK_ACTIONS[name] = f
+        if name in SLACK_ACTIONS:
+            SLACK_ACTIONS[name].append(f)
+        else:
+            SLACK_ACTIONS[name] = [f]
         return f
 
     return __inner
@@ -22,7 +25,11 @@ def register_slack_action(name):
 
 def register_slack_event(name):
     def __inner(f):
-        SLACK_EVENTS[name] = f
+        if name in SLACK_EVENTS:
+            SLACK_EVENTS[name].append(f)
+        else:
+            SLACK_EVENTS[name] = [f]
+
         return f
 
     return __inner
