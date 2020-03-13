@@ -31,6 +31,8 @@ SENTRY_DSN='<SENTRY DSN URL>'
 
 REDDIT_USERNAME=altair
 TURBOT_USER_ID="Altaïr"
+
+DATABASE_URL=<SET IN DOCKER-COMPOSE.YML>
 ```
 
 To run the project locally, you can use the `docker-compose.yml` file as such:
