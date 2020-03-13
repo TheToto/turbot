@@ -3,11 +3,21 @@ version: '3'
 services:
   postgres:
     image: postgres
+    restart: always
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
   turbot:
     build: .
-    ports:
-      - 8000:8000
+    restart: always
+    command: ./entrypoint.sh
     environment:
       DATABASE_URL: "psql://postgres:postgres@postgres:5432/postgres"
-      GUNICORN_CMD_ARGS: "--bind=0.0.0.0:8000 --workers=4"
+      GUNICORN_CMD_ARGS: "--bind=0.0.0.0:5000 --workers=4"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:

@@ -12,21 +12,25 @@ This repository uses [black](https://github.com/python/black) to check the codin
 set it up as a pre-commit hook, like bellow:
 ```
 $ pip install --user black
-$ echo `black . >> .git/hooks/pre-commit`
+$ echo `black . --check >> .git/hooks/pre-commit`
 ```
 
 To run this project, you need to set the appropriate env variables. You can do this easily with a `.env` file
 ```
 $ cat .env
 SLACK_API_TOKEN='<YOUR SLACK API TOKEN>'
-ERROR_ICON_URL='https://i.imgur.com/Rt3XKCI.jpg'
+ERROR_ICON_URL='https://avatars.slack-edge.com/2020-01-26/912482972977_c35fc728767571761a5e_512.png'
 SECRET_KEY='<LOCAL_SECRET_KEY>'
 DJANGO_SETTINGS_MODULE=turbot.settings
 PRAW_CLIENT_ID='<YOUR REDDIT CLIENT ID>'
 PRAW_CLIENT_SECRET='<YOUR REDDIT CLIENT SECRET>'
 DEBUG=True
 PHOTO_FSTRING='<A FORMAT STRING TO SEND MEMBER PICTURES>'
+PHOTO_FSTRING_SQUARE='<A FORMAT STRING TO SEND MEMBER PICTURES>'
 SENTRY_DSN='<SENTRY DSN URL>'
+
+REDDIT_USERNAME=altair
+TURBOT_USER_ID="Altaïr"
 ```
 
 To run the project locally, you can use the `docker-compose.yml` file as such:

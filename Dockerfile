@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.8
 
 RUN pip install pipenv
 
@@ -10,4 +10,4 @@ RUN set -ex && pipenv install --deploy --system
 
 COPY . /app
 
-CMD gunicorn turbot.wsgi
+RUN python manage.py collectstatic
