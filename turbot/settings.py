@@ -29,7 +29,7 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = ["slack.thetoto.fr"]
+ALLOWED_HOSTS = ["slack.thetoto.fr", "slack-dev.thetoto.fr"]
 
 
 # Application definition
@@ -48,7 +48,6 @@ THIRD_PARTY_APPS = []
 LOCAL_APPS = [
     "polls.apps.PollsConfig",
     "workspaces.apps.WorkspacesConfig",
-    "reddit.apps.RedditConfig",
 ]
 
 INSTALLED_APPS = BASE_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -137,12 +136,6 @@ LOGGING = {
 
 ERROR_ICON_URL = env("ERROR_ICON_URL", None)
 
-PRAW_CLIENT_ID = env("PRAW_CLIENT_ID")
-PRAW_CLIENT_SECRET = env("PRAW_CLIENT_SECRET")
-PRAW_USER_AGENT = env("PRAW_USER_AGENT", default=f"turbot-slack")
-
-REDDIT_SUBMISSION_CACHE_COUNT = env("REDDIT_SUBMISSION_CACHE_COUNT", default=5)
-
 SLACK_CLIENT = WebClient(SLACK_API_TOKEN)
 
 NIGHT_START = parser.parse(env("NIGHT_START", default="23:00")).time()
@@ -152,7 +145,5 @@ PHOTO_FSTRING = env("PHOTO_FSTRING", default="https://picsum.photos/200?{}")
 PHOTO_FSTRING_SQUARE = env(
     "PHOTO_FSTRING_SQUARE", default="https://picsum.photos/200?{}"
 )
-
-REDDIT_VALID_EXTENSION = ["jpg", "png", "gif"]
 
 TURBOT_USER_ID = env("TURBOT_USER_ID")

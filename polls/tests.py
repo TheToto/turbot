@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .views import get_poll_choices, InvalidPollException
+from .actions import get_poll_choices, InvalidPollException
 
 
 class TestPollChoices(TestCase):

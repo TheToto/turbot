@@ -9,5 +9,3 @@ COPY Pipfile Pipfile.lock ./
 RUN set -ex && pipenv install --deploy --system
 
 COPY . /app
-
-RUN python manage.py collectstatic

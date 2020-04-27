@@ -19,7 +19,6 @@ gunicorn = "*"
 psycopg2-binary = "*"
 requests = "*"
 whitenoise = "*"
-praw = "*"
 python-dateutil = "*"
 sentry-sdk = "*"
 

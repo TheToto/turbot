@@ -13,7 +13,12 @@ from slackblocks import (
 )
 from turbot import settings
 from workspaces.models import User
-from workspaces.utils import register_slack_action, get_request_entities
+from workspaces.utils import (
+    register_slack_action,
+    register_slack_command,
+    send_message,
+    send_ephemeral,
+)
 
 logger = logging.getLogger("slackbot")
 
@@ -47,31 +52,22 @@ def get_report_blocks(login, text, author=None):
     return repr(blocks)
 
 
-def report(request):
-    _, _, _ = get_request_entities(request)
-    login, report_text = request.POST["text"].split(maxsplit=1)
+@register_slack_command("/report")
+def report(state):
+    login, report_text = state.text.split(maxsplit=1)
     login = login.lower()
-    return JsonResponse(
-        {"text": "Report preview", "blocks": get_report_blocks(login, report_text)}
+    send_ephemeral(
+        state, text=f"Report preview", blocks=get_report_blocks(login, report_text)
     )
 
 
 @register_slack_action("report.post")
-def post_report(payload):
-    author = User(payload["user"]["id"])
-    values = json.loads(payload["actions"][0]["value"])
+def post_report(state):
+    values = json.loads(state.text)
     login = values["login"]
     text = values["text"]
 
-    blocks = get_report_blocks(login, text, author)
-    logger.debug(blocks)
+    blocks = get_report_blocks(login, text, state.user)
 
-    logger.debug(
-        settings.SLACK_CLIENT.chat_postMessage(
-            text=f"{author} reported {login}",
-            channel=payload["channel"]["id"],
-            blocks=blocks,
-        )
-    )
-    requests.post(payload["response_url"], json={"delete_original": "true",})
-    return HttpResponse(status=200)
+    send_message(state, text=f"{state.user} reported {login}", blocks=blocks)
+    requests.post(state.response_url, json={"delete_original": "true",})

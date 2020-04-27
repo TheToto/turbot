@@ -5,7 +5,7 @@ from django.http import HttpResponse
 
 from slackblocks import Text, SectionBlock
 from turbot import settings
-from workspaces.utils import register_slack_event
+from workspaces.utils import register_slack_event, send_message
 
 logger = logging.getLogger("slackbot")
 
@@ -34,13 +34,10 @@ def find_code_blocks(message):
 
 
 @register_slack_event("app_mention")
-def spell_check(payload):
-    if "thread_ts" in payload["event"]:  # Mentioned in a thread
+def spell_check(state):
+    if state.thread_ts:  # Mentioned in a thread
         query = settings.SLACK_CLIENT.conversations_history(
-            channel=payload["event"]["channel"],
-            latest=payload["event"]["thread_ts"],
-            limit=1,
-            inclusive="true",
+            channel=state.channel.id, latest=state.thread_ts, limit=1, inclusive="true",
         )
         message = query["messages"][0]
         texts_to_test = find_code_blocks(message)
@@ -54,18 +51,4 @@ def spell_check(payload):
             blocks.append(SectionBlock(Text(f"```{leodagan_result}```")))
 
         if blocks:
-            settings.SLACK_CLIENT.chat_postMessage(
-                text="Léodagan report",
-                channel=payload["event"]["channel"],
-                thread_ts=payload["event"]["thread_ts"],
-                blocks=repr(blocks),
-            )
-            return HttpResponse(status=200)
-
-    settings.SLACK_CLIENT.chat_postMessage(
-        text="Bonjour ?",
-        channel=payload["event"]["channel"],
-        thread_ts=payload["event"]["thread_ts"]
-        if "thread_ts" in payload["event"]
-        else None,
-    )
+            send_message(state, text="Léodagan report", blocks=repr(blocks))
