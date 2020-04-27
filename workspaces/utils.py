@@ -177,7 +177,7 @@ class SlackState:
             text=payload["actions"][0]["value"],
             trigger_id=payload["trigger_id"],
             response_url=payload["response_url"],
-            ts=payload["message"]["ts"],
+            ts=payload["container"]["message_ts"],
         )
 
     @classmethod
