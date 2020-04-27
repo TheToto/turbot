@@ -1,10 +1,9 @@
-import json
 import logging
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 
 from workspaces.utils import SLACK_ACTIONS, SLACK_EVENTS, SLACK_COMMANDS
-from .utils import SlackState, send_ephemeral
+from .utils import SlackState
 
 logger = logging.getLogger("slackbot")
 

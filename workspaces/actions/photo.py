@@ -1,7 +1,6 @@
 import logging
 
 import requests
-from django.http import HttpResponse, JsonResponse
 
 from slackblocks import (
     SectionBlock,
@@ -11,7 +10,6 @@ from slackblocks import (
     ContextBlock,
 )
 from turbot import settings
-from workspaces.models import User
 from workspaces.utils import (
     register_slack_action,
     register_slack_command,

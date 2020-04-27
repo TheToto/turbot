@@ -2,19 +2,16 @@ import logging
 import re
 
 import slack.errors
+from django.conf import settings
 from django.db import transaction
-from django.http import HttpResponse
 
 from polls.models import Poll, Choice, UserChoice
-from workspaces.models import User
 from workspaces.utils import (
-    SlackErrorResponse,
     register_slack_action,
     register_slack_command,
     send_message,
     send_ephemeral,
 )
-from django.conf import settings
 
 logger = logging.getLogger("slackbot")
 

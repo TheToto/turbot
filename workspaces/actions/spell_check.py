@@ -1,8 +1,6 @@
 import logging
 from subprocess import check_output, STDOUT
 
-from django.http import HttpResponse
-
 from slackblocks import Text, SectionBlock
 from turbot import settings
 from workspaces.utils import register_slack_event, send_message

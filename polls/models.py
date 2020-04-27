@@ -2,19 +2,16 @@ from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.utils import timezone
 
-from workspaces.models import User, Team, Channel
-from workspaces.utils import int_to_emoji
-
 from slackblocks import (
     Button,
     SectionBlock,
-    Text,
-    TextType,
     Confirm,
     DividerBlock,
     ActionsBlock,
     ContextBlock,
 )
+from workspaces.models import User, Channel
+from workspaces.utils import int_to_emoji
 
 
 class Poll(models.Model):
