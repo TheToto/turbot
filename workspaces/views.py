@@ -1,9 +1,13 @@
 import logging
+import json
 
-from django.http import HttpResponse
+from algoliasearch.search_client import SearchClient
+from django.http import HttpResponse, JsonResponse
+from django.conf import settings
 
 from workspaces.utils import SLACK_ACTIONS, SLACK_EVENTS, SLACK_COMMANDS
 from .utils import SlackState
+from slackblocks.elements import Option
 
 logger = logging.getLogger("slackbot")
 
@@ -34,9 +38,23 @@ def event(request):
 
 
 def command(request):
-    logger.debug(request.body)
     state = SlackState.from_command_request(request)
     logger.debug(state)
     for command_fun in SLACK_COMMANDS[state.command]:
         command_fun(state)
     return HttpResponse(status=200)
+
+
+def search(request):
+    payload = json.loads(request.POST["payload"])
+    suggestion = payload["value"]
+
+    client = SearchClient.create(settings.ALGOLIA_APP_ID, settings.ALGOLIA_API_KEY)
+    index = client.init_index(settings.ALGOLIA_INDEX)
+    result = index.search(suggestion)
+
+    students = []
+    for hit in result["hits"]:
+        students.append(Option(hit["login"], hit["login"], hit["promo"])._resolve())
+
+    return JsonResponse({"options": students})

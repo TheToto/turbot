@@ -5,4 +5,4 @@ class WorkspacesConfig(AppConfig):
     name = "workspaces"
 
     def ready(self):
-        from .actions import photo, report, spell_check, misc
+        from .actions import photo, report, spell_check, misc, modal

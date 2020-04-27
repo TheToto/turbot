@@ -60,6 +60,9 @@ class Element(ABC):
     def _resolve(self) -> Dict[str, Any]:
         pass
 
+    def __repr__(self) -> str:
+        return dumps(self._resolve(), indent=4)
+
 
 class Text(Element):
     """
@@ -140,7 +143,7 @@ class Option(Element):
     def _resolve(self) -> Dict[str, Any]:
         option = {"text": self.text._resolve(), "value": self.value}
         if self.description:
-            option["description"] = self.description
+            option["description"] = self.description._resolve()
         if self.url:
             option["url"] = self.url
         return option
@@ -326,9 +329,9 @@ class TextInput(Element):
         if self.placeholder:
             textinput["placeholder"] = self.placeholder._resolve()
         if self.initial_value:
-            textinput["initial_date"] = self.initial_value
+            textinput["initial_value"] = self.initial_value
         if self.multiline:
-            textinput["confirm"] = self.multiline
+            textinput["multiline"] = self.multiline
         if self.min_length:
             textinput["min_length"] = self.min_length
         if self.max_length:

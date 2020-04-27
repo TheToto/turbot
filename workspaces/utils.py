@@ -115,8 +115,10 @@ class SlackState:
     team: Team
     user: User
     channel: Channel
-    command: str  # if action, `action_id`
-    text: str  # if action, `value`
+    type: str
+    command: str  # if block_actions, `action_id`
+    text: str  # if block_actions, `value`
+    payload: dict
     ts: Optional[str] = None
     thread_ts: Optional[str] = None
     trigger_id: Optional[str] = None
@@ -144,14 +146,43 @@ class SlackState:
             team,
             user,
             channel,
+            type="command",
             command=request.POST["command"],
             text=request.POST["text"],
+            payload=request.POST,
             trigger_id=request.POST["trigger_id"],
+        )
+
+    @classmethod
+    def from_action_view_request(cls, request: HttpRequest) -> "SlackState":
+        payload = json.loads(request.POST["payload"])
+
+        private_metadata = json.loads(payload["view"]["private_metadata"])
+
+        team = Team.objects.get(id=payload["team"]["id"])
+
+        channel = Channel.objects.get(id=private_metadata.get("channel_id"), team=team)
+
+        user = User.objects.get(id=payload["user"]["id"], team=team)
+
+        return cls(
+            team,
+            user,
+            channel,
+            type=payload["type"],
+            command=private_metadata.get("action_id"),
+            text=private_metadata.get("value"),
+            payload=payload,
+            ts=private_metadata.get("view_id"),
+            trigger_id=payload["trigger_id"],
         )
 
     @classmethod
     def from_action_request(cls, request: HttpRequest) -> "SlackState":
         payload = json.loads(request.POST["payload"])
+
+        if "view" in payload:
+            return cls.from_action_view_request(request)
 
         team, _ = Team.objects.get_or_create(
             id=payload["team"]["id"], defaults={"domain": payload["team"]["domain"]}
@@ -173,8 +204,10 @@ class SlackState:
             team,
             user,
             channel,
+            type=payload["type"],
             command=payload["actions"][0]["action_id"],
             text=payload["actions"][0]["value"],
+            payload=payload,
             trigger_id=payload["trigger_id"],
             response_url=payload["response_url"],
             ts=payload["container"]["message_ts"],
@@ -194,7 +227,9 @@ class SlackState:
             team,
             user,
             channel,
+            type=payload["type"],
             command=payload["event"]["type"],
             text=payload["event"]["text"],
+            payload=payload,
             thread_ts=payload["event"].get("thread_ts", None),
         )

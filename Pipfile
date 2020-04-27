@@ -21,6 +21,7 @@ requests = "*"
 whitenoise = "*"
 python-dateutil = "*"
 sentry-sdk = "*"
+algoliasearch = "*"
 
 [requires]
 python_version = "3.8"

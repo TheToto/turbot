@@ -40,7 +40,6 @@ def spell_check(state):
         message = query["messages"][0]
         texts_to_test = find_code_blocks(message)
 
-        logger.debug(texts_to_test)
         blocks = []
         for text in texts_to_test:
             leodagan_result = launch_leodagan(text).decode("utf-8")

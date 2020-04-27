@@ -1,4 +1,7 @@
+import logging
 from ..utils import send_ephemeral, register_slack_command
+
+logger = logging.getLogger("slackbot")
 
 
 @register_slack_command("/suffix")

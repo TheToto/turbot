@@ -7,4 +7,5 @@ urlpatterns = [
     path("action", views.action, name="action"),
     path("event", views.event, name="event"),
     path("command", views.command, name="command"),
+    path("search-students", views.search, name="search"),
 ]

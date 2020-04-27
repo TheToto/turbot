@@ -9,6 +9,11 @@ from slackblocks import (
     Button,
     ContextBlock,
     Image,
+    ExternalSelect,
+    TextInput,
+    InputBlock,
+    Option,
+    make_modal,
 )
 from turbot import settings
 from workspaces.utils import (
@@ -16,7 +21,9 @@ from workspaces.utils import (
     register_slack_command,
     send_message,
     send_ephemeral,
+    SlackState,
 )
+from .modal import send_modal, get_modal_state
 
 logger = logging.getLogger("slackbot")
 
@@ -28,44 +35,48 @@ def get_report_blocks(login, text, author=None):
             accessory=Image(
                 image_url=settings.PHOTO_FSTRING_SQUARE.format(login), alt_text=login
             ),
-        )
+        ),
+        ContextBlock(f"*By: {author.slack_username}*"),
     ]
-    if not author:
-        response = requests.head(settings.PHOTO_FSTRING_SQUARE.format(login))
-        if response.status_code != 200:
-            blocks.append(SectionBlock(":warning: Login not found"))
-
-        blocks.append(
-            ActionsBlock(
-                Button(
-                    text="Send report",
-                    action_id="report.post",
-                    value=json.dumps({"login": login, "text": text}),
-                )
-            )
-        )
-    else:
-        blocks.append(ContextBlock(f"*By: {author.slack_username}*"))
-
     return repr(blocks)
 
 
 @register_slack_command("/report")
 def report(state):
-    login, report_text = state.text.split(maxsplit=1)
-    login = login.lower()
-    send_ephemeral(
-        state, text=f"Report preview", blocks=get_report_blocks(login, report_text)
+    splitted = state.text.split(maxsplit=1)
+    login = splitted[0] if len(splitted) > 0 else None
+    report_text = splitted[1] if len(splitted) > 1 else None
+
+    blocks = [
+        InputBlock(
+            "Choose a student",
+            element=ExternalSelect(
+                "Type a login",
+                "report.student",
+                initial_option=Option(login, login) if login else None,
+            ),
+        ),
+        InputBlock(
+            "Describe the issue",
+            element=TextInput(
+                "report.description", initial_value=report_text, multiline=True
+            ),
+        ),
+    ]
+
+    send_modal(
+        state,
+        make_modal(
+            state, title="Report a student", blocks=blocks, action_id="report.post"
+        ),
     )
 
 
 @register_slack_action("report.post")
 def post_report(state):
-    values = json.loads(state.text)
-    login = values["login"]
-    text = values["text"]
-
-    blocks = get_report_blocks(login, text, state.user)
-
-    send_message(state, text=f"{state.user} reported {login}", blocks=blocks)
-    requests.post(state.response_url, json={"delete_original": "true",})
+    if state.type == "view_submission":
+        modal_state = get_modal_state(state.payload)
+        login = modal_state["report.student"]["selected_option"]["value"]
+        description = modal_state["report.description"]["value"]
+        blocks = get_report_blocks(login, description, state.user)
+        send_message(state, text=f"{state.user} reported {login}", blocks=blocks)
