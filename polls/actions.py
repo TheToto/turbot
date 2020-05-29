@@ -5,6 +5,11 @@ import slack.errors
 from django.conf import settings
 from django.db import transaction
 
+from slackblocks import (
+    InputBlock,
+    TextInput,
+    make_modal,
+)
 from polls.models import Poll, Choice, UserChoice
 from workspaces.utils import (
     register_slack_action,
@@ -12,6 +17,8 @@ from workspaces.utils import (
     send_message,
     send_ephemeral,
 )
+from workspaces.actions.modal import send_modal, get_modal_state
+
 
 logger = logging.getLogger("slackbot")
 
@@ -75,12 +82,13 @@ def delete(state):
     poll.delete()
 
 
-@register_slack_command("/poll", unique=False, anonymous=False)
-@register_slack_command("/poll-unique", unique=True, anonymous=False)
-@register_slack_command("/poll-anon", unique=False, anonymous=True)
-@register_slack_command("/poll-anon-unique", unique=True, anonymous=True)
+@register_slack_command("/poll", params=[])
+@register_slack_command("/poll-open", params=["open"])
+@register_slack_command("/poll-unique", params=["unique"])
+@register_slack_command("/poll-anon", params=["annon"])
+@register_slack_command("/poll-anon-unique", params=["unique", "annon"])
 @transaction.atomic
-def create(state, unique=False, anonymous=False):
+def create(state, params=[]):
     try:
         name, choices = get_poll_choices(state.text)
     except InvalidPollException as e:
@@ -90,9 +98,10 @@ def create(state, unique=False, anonymous=False):
         name=name,
         creator=state.user,
         channel=state.channel,
-        unique_choice=unique,
-        anonymous=anonymous,
-        visible_results=not anonymous,
+        unique_choice="unique" in params,
+        anonymous="annon" in params,
+        visible_results="annon" not in params,
+        open_choice="open" in params,
     )
 
     for index, choice in enumerate(choices):
@@ -126,3 +135,40 @@ def reveal_results(state):
         channel=state.channel.id,
         blocks=poll.slack_blocks,
     )
+
+
+@register_slack_action("polls.new_choice")
+def modal_new_choice(state):
+    blocks = [
+        InputBlock("Describe the issue", element=TextInput("polls.choice")),
+    ]
+
+    send_modal(
+        state,
+        make_modal(
+            state,
+            title="Submit a new choice",
+            blocks=blocks,
+            action_id="polls.new_choice.send",
+            value=state.text,
+        ),
+    )
+
+
+@transaction.atomic
+@register_slack_action("polls.new_choice.send")
+def add_new_choice(state):
+    if state.type == "view_submission":
+        modal_state = get_modal_state(state.payload)
+        choice = modal_state["polls.choice"]["value"]
+
+        poll = Poll.objects.get(id=state.text)
+
+        poll.choices.create(index=len(poll.choices.all()), text=choice)
+
+        settings.SLACK_CLIENT.chat_update(
+            ts=state.ts,
+            text=f"Poll: {poll.name}",
+            channel=state.channel.id,
+            blocks=poll.slack_blocks,
+        )

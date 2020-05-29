@@ -22,6 +22,7 @@ class Poll(models.Model):
     channel = models.ForeignKey(Channel, related_name="polls", on_delete=models.CASCADE)
     unique_choice = models.BooleanField(default=False)
     anonymous = models.BooleanField(default=False)
+    open_choice = models.BooleanField(default=False)
     visible_results = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -62,6 +63,19 @@ class Poll(models.Model):
                 if not self.visible_results
                 else []
             ),
+            *(
+                [
+                    ActionsBlock(
+                        Button(
+                            "Add a choice",
+                            action_id="polls.new_choice",
+                            value=f"{self.id}",
+                        )
+                    )
+                ]
+                if self.open_choice
+                else []
+            ),
             ContextBlock(f"*Created By:* {self.creator.slack_username}"),
             ContextBlock(f'{timezone.now().strftime("Last updated: %x at %H:%M")}'),
         ]
@@ -87,9 +101,6 @@ class Choice(models.Model):
 
     class Meta:
         unique_together = ("index", "poll")
-        constraints = (
-            CheckConstraint(check=Q(index__gte=0, index__lt=9), name="index_in_bounds"),
-        )
 
     @property
     def slack_text(self):
