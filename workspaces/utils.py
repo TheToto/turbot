@@ -83,21 +83,8 @@ def send_message(state, text, blocks=None, thread_ts=None):
     )
 
 
-class SlackErrorResponse(JsonResponse):
-    def __init__(self, text: str, *args, **kwargs):
-        super().__init__(
-            {
-                "response_type": "ephemeral",
-                "text": text,
-                "icon_url": settings.ERROR_ICON_URL,
-            },
-            *args,
-            **kwargs
-        )
-
-
 def int_to_emoji(index: int):
-    return [
+    emoji_list = [
         ":one:",
         ":two:",
         ":three:",
@@ -107,7 +94,10 @@ def int_to_emoji(index: int):
         ":seven:",
         ":eight:",
         ":nine:",
-    ][index]
+    ]
+    if index >= len(emoji_list):
+        return str(index + 1)
+    return emoji_list[index]
 
 
 @dataclass

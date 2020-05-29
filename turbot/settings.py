@@ -134,7 +134,7 @@ LOGGING = {
     },
 }
 
-ERROR_ICON_URL = env("ERROR_ICON_URL", None)
+ERROR_ICON_URL = env("ERROR_ICON_URL", default=None)
 
 SLACK_CLIENT = WebClient(SLACK_API_TOKEN)
 
@@ -146,8 +146,8 @@ PHOTO_FSTRING_SQUARE = env(
     "PHOTO_FSTRING_SQUARE", default="https://picsum.photos/200?{}"
 )
 
-TURBOT_USER_ID = env("TURBOT_USER_ID")
+TURBOT_USER_ID = env("TURBOT_USER_ID", default="Turbot")
 
-ALGOLIA_APP_ID = env("ALGOLIA_APP_ID")
-ALGOLIA_API_KEY = env("ALGOLIA_API_KEY")
-ALGOLIA_INDEX = env("ALGOLIA_INDEX")
+ALGOLIA_APP_ID = env("ALGOLIA_APP_ID", default=None)
+ALGOLIA_API_KEY = env("ALGOLIA_API_KEY", default=None)
+ALGOLIA_INDEX = env("ALGOLIA_INDEX", default=None)
