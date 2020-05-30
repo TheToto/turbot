@@ -8,7 +8,6 @@ from django.db import transaction
 from slackblocks import (
     InputBlock,
     TextInput,
-    make_modal,
 )
 from polls.models import Poll, Choice, UserChoice
 from workspaces.utils import (
@@ -17,8 +16,7 @@ from workspaces.utils import (
     send_message,
     send_ephemeral,
 )
-from workspaces.actions.modal import send_modal, get_modal_state
-
+from workspaces.modal import send_modal, get_modal_state, make_modal
 
 logger = logging.getLogger("slackbot")
 
@@ -80,18 +78,7 @@ def delete(state):
     poll.delete()
 
 
-@register_slack_command("/poll", params=[])
-@register_slack_command("/poll-open", params=["open"])
-@register_slack_command("/poll-unique", params=["unique"])
-@register_slack_command("/poll-anon", params=["annon"])
-@register_slack_command("/poll-anon-unique", params=["unique", "annon"])
-@transaction.atomic
-def create(state, params=[]):
-    try:
-        name, choices = get_poll_choices(state.text, "open" in params)
-    except InvalidPollException as e:
-        return send_ephemeral(state, f":x: {e} :x:\n`/poll {state.text}`")
-
+def create_poll(state, name, choices, params):
     poll = Poll.objects.create(
         name=name,
         creator=state.user,
@@ -108,12 +95,23 @@ def create(state, params=[]):
     try:
         send_message(state, text=f"Poll: {poll.name}", blocks=poll.slack_blocks)
     except slack.errors.SlackApiError as e:
-        logger.error(e)
         poll.delete()
-        return send_ephemeral(
-            state,
-            f":x: Could not create the poll. Is <@{settings.TURBOT_USER_ID}> in the channel ? :x:\n`/poll {state.text}`",
-        )
+        raise e
+
+
+@register_slack_command("/poll", params=[])
+@register_slack_command("/poll-open", params=["open"])
+@register_slack_command("/poll-unique", params=["unique"])
+@register_slack_command("/poll-anon", params=["annon"])
+@register_slack_command("/poll-anon-unique", params=["unique", "annon"])
+@transaction.atomic
+def create(state, params=[]):
+    try:
+        name, choices = get_poll_choices(state.text, "open" in params)
+    except InvalidPollException as e:
+        return send_ephemeral(state, f":x: {e} :x:\n`/poll {state.text}`")
+
+    create_poll(state, name, choices, params)
 
 
 @transaction.atomic

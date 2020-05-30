@@ -1,6 +1,7 @@
 import logging
 import json
 
+import slack.errors
 from algoliasearch.search_client import SearchClient
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
@@ -19,8 +20,12 @@ def oauth(request):
 def action(request):
     state = SlackState.from_action_request(request)
     logger.debug(state)
-    for action_fun in SLACK_ACTIONS[state.command]:
-        action_fun(state)
+    try:
+        for action_fun in SLACK_ACTIONS[state.command]:
+            action_fun(state)
+    except slack.errors.SlackApiError as e:
+        logger.error(e)
+        return HttpResponse(status=500)
     return HttpResponse(status=200)
 
 
@@ -32,16 +37,30 @@ def event(request):
     state = SlackState.from_event_request(request)
     logger.debug(state)
     event_name = state.command
-    for event_fun in SLACK_EVENTS[event_name]:
-        event_fun(state)
+    try:
+        for event_fun in SLACK_EVENTS[event_name]:
+            event_fun(state)
+    except slack.errors.SlackApiError as e:
+        logger.error(e)
+        return HttpResponse(status=500)
     return HttpResponse(status=200)
 
 
 def command(request):
     state = SlackState.from_command_request(request)
     logger.debug(state)
-    for command_fun in SLACK_COMMANDS[state.command]:
-        command_fun(state)
+    try:
+        for command_fun in SLACK_COMMANDS[state.command]:
+            command_fun(state)
+    except slack.errors.SlackApiError as e:
+        logger.error(e)
+        return JsonResponse(
+            {
+                "response_type": "ephemeral",
+                "text": f":x: Slack API error. Is <@{settings.TURBOT_USER_ID}> in this channel ? :x:\n`{state.command} {state.text}",
+                "icon_url": settings.ERROR_ICON_URL,
+            },
+        )
     return HttpResponse(status=200)
 
 

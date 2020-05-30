@@ -27,6 +27,7 @@ class ElementType(Enum):
 
     TEXT_INPUT = "plain_text_input"
     RADIO_BUTTON = "radio_buttons"
+    CHECKBOXES = "checkboxes"
 
     # TODO: OPTION_GROUP = "option_group"
     OPTION = "option"
@@ -367,6 +368,37 @@ class RadioButton(Element):
         if self.confirm:
             radio["confirm"] = self.confirm._resolve()
         return radio
+
+
+class Checkboxes(Element):
+    """
+    Usable only in modals and home
+    """
+
+    def __init__(
+        self,
+        action_id: str,
+        options: List[Option],
+        initial_options: Optional[List[Option]] = None,
+        confirm: Optional[Confirm] = None,
+    ):
+        super().__init__(type_=ElementType.CHECKBOXES)
+        self.action_id = action_id
+        self.options = options
+        self.initial_options = initial_options
+        self.confirm = confirm
+
+    def _resolve(self) -> Dict[str, Any]:
+        checkboxes = self._attributes()
+        checkboxes["action_id"] = self.action_id
+        checkboxes["options"] = [option._resolve() for option in self.options]
+        if self.initial_options:
+            checkboxes["initial_options"] = [
+                option._resolve() for option in self.initial_options
+            ]
+        if self.confirm:
+            checkboxes["confirm"] = self.confirm._resolve()
+        return checkboxes
 
 
 class StaticSelect(Element):

@@ -6,3 +6,4 @@ class PollsConfig(AppConfig):
 
     def ready(self):
         from . import actions
+        from . import modal

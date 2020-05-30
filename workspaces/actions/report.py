@@ -1,29 +1,21 @@
-import json
 import logging
-
-import requests
 
 from slackblocks import (
     SectionBlock,
-    ActionsBlock,
-    Button,
     ContextBlock,
     Image,
     ExternalSelect,
     TextInput,
     InputBlock,
     Option,
-    make_modal,
 )
 from turbot import settings
+from workspaces.modal import send_modal, get_modal_state, make_modal
 from workspaces.utils import (
     register_slack_action,
     register_slack_command,
     send_message,
-    send_ephemeral,
-    SlackState,
 )
-from .modal import send_modal, get_modal_state
 
 logger = logging.getLogger("slackbot")
 
