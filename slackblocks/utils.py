@@ -24,7 +24,7 @@ def make_modal(
                 "channel_id": state.channel.id,
                 "action_id": action_id,
                 "value": value,
-                "view_id": state.ts,
+                "ts": state.ts,
             }
         ),
     }

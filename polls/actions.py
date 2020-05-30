@@ -138,7 +138,7 @@ def reveal_results(state):
 @register_slack_action("polls.new_choice")
 def modal_new_choice(state):
     blocks = [
-        InputBlock("Describe the issue", element=TextInput("polls.choice")),
+        InputBlock("New choice", element=TextInput("polls.choice")),
     ]
 
     send_modal(

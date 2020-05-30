@@ -163,7 +163,7 @@ class SlackState:
             command=private_metadata.get("action_id"),
             text=private_metadata.get("value"),
             payload=payload,
-            ts=private_metadata.get("view_id"),
+            ts=private_metadata.get("ts"),
             trigger_id=payload["trigger_id"],
         )
 
