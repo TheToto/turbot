@@ -164,6 +164,7 @@ class SlackState:
             text=private_metadata.get("value"),
             payload=payload,
             ts=private_metadata.get("ts"),
+            thread_ts=private_metadata.get("thread_ts"),
             trigger_id=payload["trigger_id"],
         )
 
@@ -190,17 +191,21 @@ class SlackState:
             defaults={"name": payload["user"]["name"]},
         )
 
+        command = payload["actions"][0]["action_id"] if "actions" in payload else payload["callback_id"]
+        text = payload["actions"][0]["value"] if "actions" in payload else ""
+
         return cls(
             team,
             user,
             channel,
             type=payload["type"],
-            command=payload["actions"][0]["action_id"],
-            text=payload["actions"][0]["value"],
+            command=command,
+            text=text,
             payload=payload,
             trigger_id=payload["trigger_id"],
             response_url=payload["response_url"],
-            ts=payload["container"]["message_ts"],
+            ts=payload.get("container", {}).get("message_ts", payload.get("message", {}).get("ts")),
+            thread_ts=payload.get("message", {}).get("thread_ts"),
         )
 
     @classmethod

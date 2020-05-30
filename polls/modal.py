@@ -14,7 +14,7 @@ from workspaces.modal import (
     get_modal_state,
     update_modal,
     dispatch_modal_actions,
-    get_private_metadata,
+    get_modal_metadata,
     make_modal,
 )
 from workspaces.utils import (
@@ -57,13 +57,16 @@ def get_blocks(nb_choice):
 
 
 @register_slack_command("/poll-build")
+@register_slack_action("poll.build")
 def poll_builder(state):
     blocks = get_blocks(2)
+
+    state.thread_ts = state.ts
 
     send_modal(
         state,
         make_modal(
-            state, title="Create a poll2", blocks=blocks, action_id="poll.build"
+            state, title="Create a poll", blocks=blocks, action_id="poll.build"
         ),
         keep_view_id=True,
     )
@@ -71,7 +74,7 @@ def poll_builder(state):
 
 @register_slack_action("poll.build.add_choice")
 def poll_builder_add_choice(state):
-    nb_choice = get_private_metadata(state).get("nb_choice", 2) + 1
+    nb_choice = get_modal_metadata(state).get("nb_choice", 2) + 1
     blocks = get_blocks(nb_choice)
 
     update_modal(

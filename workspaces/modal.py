@@ -21,11 +21,12 @@ def make_modal(
     close: Optional[Union[Text, str]] = "Cancel",
 ):
     private_metadata = {
+        **get_modal_metadata(state),
         "channel_id": state.channel.id,
         "action_id": action_id,
         "value": value,
         "ts": state.ts,
-        **get_private_metadata(state),
+        "thread_ts": state.thread_ts,
         **metadata,
     }
 
@@ -56,12 +57,12 @@ def send_modal(state, view, keep_view_id=False):
     settings.SLACK_CLIENT.views_update(view_id=view_id, view=view)
 
 
-def get_private_metadata(state):
+def get_modal_metadata(state):
     return json.loads(state.payload.get("view", {}).get("private_metadata", "{}"))
 
 
 def update_modal(state, view):
-    private_metadata = get_private_metadata(state)
+    private_metadata = get_modal_metadata(state)
     view_id = private_metadata.get("view_id")
     if not view_id:
         return logger.error("No view_id for update modal !")
