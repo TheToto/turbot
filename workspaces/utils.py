@@ -85,6 +85,7 @@ def send_message(state, text, blocks=None, thread_ts=None):
 
 def int_to_emoji(index: int):
     emoji_list = [
+        ":zero:",
         ":one:",
         ":two:",
         ":three:",
@@ -95,9 +96,8 @@ def int_to_emoji(index: int):
         ":eight:",
         ":nine:",
     ]
-    if index >= len(emoji_list):
-        return str(index + 1)
-    return emoji_list[index]
+    digits = [int(x) for x in str(index + 1)]
+    return "".join(map(lambda x: emoji_list[x], digits))
 
 
 @dataclass
