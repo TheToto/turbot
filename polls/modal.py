@@ -65,9 +65,7 @@ def poll_builder(state):
 
     send_modal(
         state,
-        make_modal(
-            state, title="Create a poll", blocks=blocks, action_id="poll.build"
-        ),
+        make_modal(state, title="Create a poll", blocks=blocks, action_id="poll.build"),
         keep_view_id=True,
     )
 

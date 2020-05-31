@@ -191,7 +191,11 @@ class SlackState:
             defaults={"name": payload["user"]["name"]},
         )
 
-        command = payload["actions"][0]["action_id"] if "actions" in payload else payload["callback_id"]
+        command = (
+            payload["actions"][0]["action_id"]
+            if "actions" in payload
+            else payload["callback_id"]
+        )
         text = payload["actions"][0]["value"] if "actions" in payload else ""
 
         return cls(
@@ -204,7 +208,9 @@ class SlackState:
             payload=payload,
             trigger_id=payload["trigger_id"],
             response_url=payload["response_url"],
-            ts=payload.get("container", {}).get("message_ts", payload.get("message", {}).get("ts")),
+            ts=payload.get("container", {}).get(
+                "message_ts", payload.get("message", {}).get("ts")
+            ),
             thread_ts=payload.get("message", {}).get("thread_ts"),
         )
 
