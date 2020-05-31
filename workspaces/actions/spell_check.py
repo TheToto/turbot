@@ -3,7 +3,7 @@ from subprocess import check_output, STDOUT
 
 from slackblocks import Text, SectionBlock
 from turbot import settings
-from workspaces.utils import register_slack_event, send_message
+from workspaces.utils import register_slack_event, send_message, register_slack_action
 
 logger = logging.getLogger("slackbot")
 
@@ -45,7 +45,7 @@ def process_leodagan(state, message):
         send_message(state, text="Léodagan report", blocks=repr(blocks))
 
 
-@register_slack_event("leodagan.check")
+@register_slack_action("leodagan.check")
 def spell_check_shortcut(state):
     if state.thread_ts:
         query = settings.SLACK_CLIENT.conversations_replies(
