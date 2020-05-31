@@ -1,3 +1,0 @@
-[submodule "submodule/leodagan"]
-	path = submodule/leodagan
-	url = git@gitlab.cri.epita.fr:cyril/leodagan.git
