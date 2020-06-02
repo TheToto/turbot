@@ -65,7 +65,7 @@ def poll_builder(state):
 
     send_modal(
         state,
-        make_modal(state, title="Create a poll", blocks=blocks, action_id="poll.build"),
+        make_modal(state, title="Create a poll", blocks=blocks, action_id="poll.create"),
         keep_view_id=True,
     )
 
@@ -87,7 +87,7 @@ def poll_builder_add_choice(state):
     )
 
 
-@register_slack_action("poll.build")
+@register_slack_action("poll.create")
 def post_poll(state):
     if state.type == "block_actions":
         dispatch_modal_actions(state)
