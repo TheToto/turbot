@@ -69,6 +69,7 @@ def delete(state):
 
     if not state.user.has_permissions and state.user != poll.creator:
         send_ephemeral(state, f"You are not the creator of this poll.")
+        return
 
     logger.debug(
         settings.SLACK_CLIENT.chat_delete(ts=state.ts, channel=poll.channel.id,)
@@ -121,6 +122,7 @@ def reveal_results(state):
 
     if poll.creator.id != state.user.id:
         send_ephemeral(state, f"You are not the creator of this poll.")
+        return
 
     poll.visible_results = True
     poll.save()
