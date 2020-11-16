@@ -42,11 +42,14 @@ def report(state):
     blocks = [
         InputBlock(
             "Choose a student",
-            element=ExternalSelect(
-                "Type a login",
-                "report.student",
-                initial_option=Option(login, login) if login else None,
+            element=TextInput(
+                "report.student", initial_value=login
             ),
+            #element=ExternalSelect(
+            #    "Type a login",
+            #    "report.student",
+            #    initial_option=Option(login, login) if login else None,
+            #),
         ),
         InputBlock(
             "Describe the issue",
@@ -68,7 +71,8 @@ def report(state):
 def post_report(state):
     if state.type == "view_submission":
         modal_state = get_modal_state(state.payload)
-        login = modal_state["report.student"]["selected_option"]["value"]
+        #login = modal_state["report.student"]["selected_option"]["value"]
+        login = modal_state["report.student"]["value"]
         description = modal_state["report.description"]["value"]
         blocks = get_report_blocks(login, description, state.user)
         send_message(state, text=f"{state.user} reported {login}", blocks=blocks)
