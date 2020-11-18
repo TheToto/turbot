@@ -36,3 +36,35 @@ To run the project locally, you can use the `docker-compose.yml` file as such:
 ```
 $ docker-compose up -d
 ```
+
+## Slack App setup
+
+You should first create [a new app](https://api.slack.com/authentication/basics).
+
+Give this app the following scopes:
+
+- `chat:write`
+- `channels:read`
+- `commands`
+
+Then create commands for this app. The app supports the following commands, you
+don't have to register them all:
+
+- `/poll`
+- `/poll-open`
+- `/poll-unique`
+- `/poll-anon`
+- `/poll-anon-unique`
+- `/poll-build`
+- `/report`
+- `/cri-photo`
+
+All commands that you'll register will have the same **Request URL**:
+`https://$HOST/command`
+
+For interactive modals to work, you should also add the `https://$HOST/action`
+URL in the **Interactivity & Shortcuts** section.
+
+Don't forget to add `$HOST` to `ALLOWED_HOSTS` in `turbot/settings.py` when
+deploying. Your app should be ready, you can now add it to a workspace of your
+choice!
